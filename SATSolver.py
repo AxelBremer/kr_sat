@@ -49,10 +49,12 @@ def satisfied(ind):
     
     indices.remove(ind)
     for lit in literals:
+        toremove = []
         for tup in literals[lit]:
             if tup[0] == ind:
-                print(tup)
-                literals[lit].remove(tup)
+                toremove.append(tup)
+        for tup in toremove:
+            literals[lit].remove(tup)
 
 def find_tautologies():
     prev_ind = -1
