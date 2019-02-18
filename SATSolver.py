@@ -45,16 +45,16 @@ def to_dimacs(sudokus):
     return sudokus
     
 def satisfied(ind):
-    global indices
-    
-    indices.remove(ind)
-    for lit in literals:
-        toremove = []
-        for tup in literals[lit]:
-            if tup[0] == ind:
-                toremove.append(tup)
-        for tup in toremove:
-            literals[lit].remove(tup)
+	global indices
+   
+	indices.remove(ind)
+	for lit in literals:
+		toremove = []
+		for tup in literals[lit]:
+			if tup[0] == ind:
+				toremove.append(tup)
+		for tup in toremove:
+			literals[lit].remove(tup)
 
 def find_tautologies():
     prev_ind = -1
@@ -69,8 +69,37 @@ def find_tautologies():
                 print(clauses[ind])
                 satisfied(ind)
             else:
-                prev_signs.append(sign)
+            	prev_signs.append(sign)
             #joe = raw_input('...')
+
+def get_formula():
+	return [clauses[index] for index in indices]
+
+def find_pure_literals():
+	formula = get_formula()
+	for lit in literals:
+		if not (any('-'+lit in clause for clause in formula) and any(lit in clause for clause in formula)):
+			if(any('-'+lit in clause for clause in formula)):
+				# Set pure literal to false
+				literals[lit].append(0);
+			else:
+				# Set pure literal to true
+				literals[lit].append(1)
+
+def find_unit_clauses(truth_value=1):
+	formula = get_formula()
+	for clause in formula: 
+		if len(clause)==1:
+			literals[clause[0]].append(truth_value)
+			if(truth_value==1):
+				satisfied(literals[clause[0]][0][0])
+			
+def dpll():
+	find_tautologies()
+	find_pure_literals()
+	find_unit_clauses()
+
+
 
 with  open("sudoku-rules.txt") as file:
     data = file.read()
@@ -86,10 +115,16 @@ sudoku_nr = 0
 
 add_clauses(sudokus[sudoku_nr])
 
+'''
 add_clauses("1811 -1811 0\n")
 
-print(literals['1811'])
+add_clauses("1812 -1813 0\n")
 
-find_tautologies()
+add_clauses("1345 0\n")
 
-print(literals['1811'])
+add_clauses("-1950 0\n")
+'''
+
+dpll()
+
+
