@@ -12,8 +12,8 @@ def add_to_lit_dict(lit, index):
     else:
         sign = 1
     if lit not in literals:
-        literals[lit] = []
-    literals[lit].append((index, sign))
+        literals[lit] = {'occ':[], 'value':0}
+    literals[lit]['occ'].append((index, sign))
 
 def add_clauses(dimacs):
     global clause_counter, clauses, indices
@@ -50,17 +50,17 @@ def satisfied(ind):
     indices.remove(ind)
     for lit in literals:
         toremove = []
-        for tup in literals[lit]:
+        for tup in literals[lit]['occ']:
             if tup[0] == ind:
                 toremove.append(tup)
         for tup in toremove:
-            literals[lit].remove(tup)
+            literals[lit]['occ'].remove(tup)
 
 def find_tautologies():
     prev_ind = -1
     prev_signs = []
     for lit in literals:
-        for (ind, sign) in literals[lit]:
+        for (ind, sign) in literals[lit]['occ']:
             if ind != prev_ind:
                 prev_signs = [sign]
                 prev_ind = ind
