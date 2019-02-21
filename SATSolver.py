@@ -4,6 +4,7 @@ import copy
 import random
 import time
 import progressbar
+import pickle
 
 DataTuple = recordtype("DataTuple", "clauses literals indices lit_list clause_counter")
 
@@ -167,9 +168,6 @@ def find_pure_literals(data):
 #            print("pure", lit, sign)
             set_lit(lit, sign, data)
  #           if sign == 1: input('...')
-            found = True
-            while(check_clauses(lit, data)):
-                pass
             return True
     return found
 
@@ -216,8 +214,6 @@ def find_unit_clauses(data):
             set_lit(lit, data, sign)
             # print('value:',data.literals[lit]['value'])
 #            if sign == 1: input('...')
-            while(check_clauses(lit, data)):
-                pass
             # print(ind not in data.indices)
             return True
         else:
@@ -229,8 +225,6 @@ def find_unit_clauses(data):
                 set_lit(lit, data, sign)
                 # print('value:',data.literals[lit]['value'])
 #                if sign == 1: input('...')
-                while(check_clauses(lit, data)):
-                    pass
                 # print(ind not in data.indices)
                 return True
 
@@ -248,7 +242,6 @@ def check_clauses(lit, data):
         for atom in clause:
             sign, lit = get_sign_and_lit(atom)
             if sign == data.literals[lit]['value']:
-                # print("satisfied",clause)
                 satisfied(ind, data)
                 prog = total - len(data.indices)
                 bar.update(prog)
@@ -263,18 +256,14 @@ def set_lit(lit, data, sign):
     data.literals[lit]['value'] = sign
     if lit in data.lit_list: 
         data.lit_list.remove(lit)
-        # print("removed", lit)
+    while(check_clauses(lit, data)):
+        pass
 
 def dpll(data):
     if data.indices == []:
         return True, data
 
-    #print(len(data.lit_list))
-    #print(data.clauses)
-
     if empty_clause(data): return False
-
-    #pdb.set_trace()
 
     find_tautologies(data)
     while(find_pure_literals(data)):
@@ -287,29 +276,22 @@ def dpll(data):
         return True, data
 
     try:
-        lit = random.choice(data.lit_list)
+        lit = data.lit_list[0]
     except:
         return False, "joe"
-    # print("choice: ", lit)
-    # input('...')
 
     data_true = copy.deepcopy(data)
     set_lit(lit, data_true, 1)
+
     succ, data_true = dpll(data_true)
     if succ:
         return succ, data_true
-    # else:
-        # print("fail")
-        # input('...')
 
     data_false = copy.deepcopy(data)
     set_lit(lit, data_false, -1)
     succ, data_false = dpll(data_false)
     if succ: 
         return succ, data_false
-    # else:
-        # print("fail")
-        # input('...')
     
     return False, "joe"
     
@@ -321,25 +303,40 @@ with open("test sudokus/1000 sudokus.txt") as file:
     dat = file.read()
 sudokus = to_dimacs(dat)
 
+solved = []
+times = []
+datas = []
+for i in range(1000):
+    print(i,'/',999)
+    data_tuple = DataTuple([], {}, [], [], 0)
 
-data_tuple = DataTuple([], {}, [], [], 0)
+    sudoku_nr = i
 
-sudoku_nr = 1
+    add_clauses(rules, data_tuple)
+    #add_clauses(sudokus[sudoku_nr], data_tuple)
+    add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
 
-add_clauses(rules, data_tuple)
-add_clauses(sudokus[sudoku_nr], data_tuple)
-#add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
+    total = len(data_tuple.clauses)
+    bar = progressbar.ProgressBar(max_value=total)
 
-total = len(data_tuple.clauses)
-bar = progressbar.ProgressBar(max_value=total)
-succ, data = dpll(data_tuple)  
-if succ:
-    true_lits = []
-    for lit in data.literals:
-        if data.literals[lit]['value'] == 1:
-            true_lits.append(int(lit))
+    start_time = time.time()
+    succ, data = dpll(data_tuple)  
+    times.append(time.time() - start_time)
+    datas.append(data)
 
-    print_sudoku(true_lits)
-    check_sudoku(true_lits) 
-else:
-    print("not solvable")
+    if succ:
+        true_lits = []
+        for lit in data.literals:
+            if data.literals[lit]['value'] == 1:
+                true_lits.append(int(lit))
+
+        solved.append(1)
+        print_sudoku(true_lits)
+        check_sudoku(true_lits) 
+    else:
+        print("not solvable")
+        solved.append(0)
+
+outfile = open("result.pickle", "wb")
+pickle.dump({"time":time,"solved":solved},outfile)
+outfile.close()
