@@ -165,9 +165,7 @@ def find_pure_literals(data):
     for lit in data.lit_list:
         pure, sign = is_pure(lit, data)
         if pure:
-#            print("pure", lit, sign)
             set_lit(lit, sign, data)
- #           if sign == 1: input('...')
             return True
     return found
 
@@ -198,9 +196,6 @@ def is_unit(ind, data):
         return True, unsat
     return False, 'joe'
 
-'''
-DEZE FF AANPASSEN
-'''
 def find_unit_clauses(data):
     clauses = data.clauses
     formula = get_formula(data)
@@ -209,26 +204,14 @@ def find_unit_clauses(data):
         if len(clause)==1:
             atom = clause[0]
             sign, lit = get_sign_and_lit(atom)
-            # print("clause: ", clause)
-            # print("single",atom,"--------------------------------------------------------")
             set_lit(lit, data, sign)
-            # print('value:',data.literals[lit]['value'])
-#            if sign == 1: input('...')
-            # print(ind not in data.indices)
             return True
         else:
             unit, atom = is_unit(ind, data)
             if unit:
-                # print("clause: ", clause)
-                # print("last",atom)
                 sign, lit = get_sign_and_lit(atom)
                 set_lit(lit, data, sign)
-                # print('value:',data.literals[lit]['value'])
-#                if sign == 1: input('...')
-                # print(ind not in data.indices)
                 return True
-
-
     return False
 
 def get_formula(data):
@@ -245,8 +228,6 @@ def check_clauses(lit, data):
                 satisfied(ind, data)
                 prog = total - len(data.indices)
                 bar.update(prog)
-                return True
-    return False
 
 def empty_clause(data):
     for clause in data.clauses:
@@ -256,8 +237,7 @@ def set_lit(lit, data, sign):
     data.literals[lit]['value'] = sign
     if lit in data.lit_list: 
         data.lit_list.remove(lit)
-    while(check_clauses(lit, data)):
-        pass
+    check_clauses(lit, data)
 
 def dpll(data):
     if data.indices == []:
@@ -313,8 +293,8 @@ for i in range(1000):
     sudoku_nr = i
 
     add_clauses(rules, data_tuple)
-    #add_clauses(sudokus[sudoku_nr], data_tuple)
-    add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
+    add_clauses(sudokus[sudoku_nr], data_tuple)
+    #add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
 
     total = len(data_tuple.clauses)
     bar = progressbar.ProgressBar(max_value=total)
