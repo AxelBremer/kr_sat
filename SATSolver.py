@@ -167,7 +167,7 @@ def find_pure_literals(data):
             set_lit(lit, sign, data)
  #           if sign == 1: input('...')
             found = True
-            while(check_clauses(data)):
+            while(check_clauses(lit, data)):
                 pass
             return True
     return found
@@ -215,7 +215,7 @@ def find_unit_clauses(data):
             set_lit(lit, data, sign)
             # print('value:',data.literals[lit]['value'])
 #            if sign == 1: input('...')
-            while(check_clauses(data)):
+            while(check_clauses(lit, data)):
                 pass
             # print(ind not in data.indices)
             return True
@@ -228,7 +228,7 @@ def find_unit_clauses(data):
                 set_lit(lit, data, sign)
                 # print('value:',data.literals[lit]['value'])
 #                if sign == 1: input('...')
-                while(check_clauses(data)):
+                while(check_clauses(lit, data)):
                     pass
                 # print(ind not in data.indices)
                 return True
@@ -239,8 +239,10 @@ def find_unit_clauses(data):
 def get_formula(data):
     return [data.clauses[i] for i in data.indices]
     
-def check_clauses(data):
-    for ind in data.indices:
+def check_clauses(lit, data):
+    tup_list = data.literals[lit]['occ']
+    ind_list = [x[0] for x in tup_list]
+    for ind in ind_list:
         clause = data.clauses[ind]
         for atom in clause:
             sign, lit = get_sign_and_lit(atom)
@@ -270,18 +272,18 @@ def dpll(data):
     if empty_clause(data): return False
 
     #pdb.set_trace()
-    while(check_clauses(data)):
-        pass
+    # while(check_clauses(data)):
+    #     pass
 
     find_tautologies(data)
-    while(find_pure_literals(data)):
-        pass
+    # while(find_pure_literals(data)):
+    #     pass
 
     while(find_unit_clauses(data)):
         pass
 
-    while(check_clauses(data)):
-        pass
+    # while(check_clauses(data)):
+    #     pass
 
     if data.indices == []:
         return True, data
