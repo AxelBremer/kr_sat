@@ -3,6 +3,7 @@ import pdb
 import copy
 import random
 import time
+import progressbar
 
 DataTuple = recordtype("DataTuple", "clauses literals indices lit_list clause_counter")
 
@@ -249,6 +250,8 @@ def check_clauses(lit, data):
             if sign == data.literals[lit]['value']:
                 # print("satisfied",clause)
                 satisfied(ind, data)
+                prog = total - len(data.indices)
+                bar.update(prog)
                 return True
     return False
 
@@ -272,18 +275,13 @@ def dpll(data):
     if empty_clause(data): return False
 
     #pdb.set_trace()
-    # while(check_clauses(data)):
-    #     pass
 
     find_tautologies(data)
-    # while(find_pure_literals(data)):
-    #     pass
+    while(find_pure_literals(data)):
+        pass
 
     while(find_unit_clauses(data)):
         pass
-
-    # while(check_clauses(data)):
-    #     pass
 
     if data.indices == []:
         return True, data
@@ -330,11 +328,10 @@ sudoku_nr = 1
 
 add_clauses(rules, data_tuple)
 add_clauses(sudokus[sudoku_nr], data_tuple)
+#add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
 
-
-
-start_time = time.time()
-
+total = len(data_tuple.clauses)
+bar = progressbar.ProgressBar(max_value=total)
 succ, data = dpll(data_tuple)  
 if succ:
     true_lits = []
@@ -346,6 +343,3 @@ if succ:
     check_sudoku(true_lits) 
 else:
     print("not solvable")
-
-elapsed_time = time.time() - start_time
-print("elapsed_time:", elapsed_time)
