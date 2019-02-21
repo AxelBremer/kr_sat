@@ -2,6 +2,7 @@ from recordtype import recordtype
 import pdb
 import copy
 import random
+import time
 
 DataTuple = recordtype("DataTuple", "clauses literals indices lit_list clause_counter")
 
@@ -328,6 +329,10 @@ sudoku_nr = 1
 add_clauses(rules, data_tuple)
 add_clauses(sudokus[sudoku_nr], data_tuple)
 
+
+
+start_time = time.time()
+
 succ, data = dpll(data_tuple)  
 if succ:
     true_lits = []
@@ -339,3 +344,6 @@ if succ:
     check_sudoku(true_lits) 
 else:
     print("not solvable")
+
+elapsed_time = time.time() - start_time
+print("elapsed_time:", elapsed_time)
