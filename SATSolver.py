@@ -198,7 +198,6 @@ def is_unit(ind, data):
 
 def find_unit_clauses(data):
     clauses = data.clauses
-    formula = get_formula(data)
     for ind in data.indices:
         clause = clauses[ind]
         if len(clause)==1:
@@ -238,6 +237,21 @@ def set_lit(lit, data, sign):
     if lit in data.lit_list: 
         data.lit_list.remove(lit)
     check_clauses(lit, data)
+    
+# clauses literals indices lit_list clause_counter
+def copy_data(data):
+    new_clauses = [x for x in data.clauses]
+    new_indices = [x for x in data.indices]
+    new_lit_list = [x for x in data.lit_list]
+    new_clause_counter = data.clause_counter
+    new_literals = {}
+    literals = data.literals
+    for lit in literals:
+        new_literals[lit] = {'occ':[], 'value':0}
+        for tup in literals[lit]['occ']:
+            new_literals[lit]['occ'].append(tup)
+        new_literals[lit]['value'] = literals[lit]['value']
+    return DataTuple(new_clauses, new_literals, new_indices, new_lit_list, new_clause_counter)
 
 def dpll(data):
     if data.indices == []:
@@ -256,18 +270,18 @@ def dpll(data):
         return True, data
 
     try:
-        lit = data.lit_list[0]
+        lit = random.choice(data.lit_list)
     except:
         return False, "joe"
 
-    data_true = copy.deepcopy(data)
+    data_true = copy_data(data)
     set_lit(lit, data_true, 1)
 
     succ, data_true = dpll(data_true)
     if succ:
         return succ, data_true
 
-    data_false = copy.deepcopy(data)
+    data_false = copy_data(data)
     set_lit(lit, data_false, -1)
     succ, data_false = dpll(data_false)
     if succ: 
@@ -281,12 +295,13 @@ with  open("sudoku-rules.txt") as file:
 
 with open("test sudokus/1000 sudokus.txt") as file:
     dat = file.read()
+
 sudokus = to_dimacs(dat)
 
 solved = []
 times = []
 datas = []
-for i in range(1000):
+for i in range(20):
     print(i,'/',999)
     data_tuple = DataTuple([], {}, [], [], 0)
 
@@ -294,7 +309,7 @@ for i in range(1000):
 
     add_clauses(rules, data_tuple)
     add_clauses(sudokus[sudoku_nr], data_tuple)
-    #add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
+#     add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
 
     total = len(data_tuple.clauses)
     bar = progressbar.ProgressBar(max_value=total)
