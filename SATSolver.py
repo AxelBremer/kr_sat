@@ -7,7 +7,8 @@ import progressbar
 import pickle
 
 DataTuple = recordtype("DataTuple", "clauses literals indices lit_list clause_counter")
-
+global performance_score
+performance_score = 0
 def print_sudoku(true_vars):
     """
     Print sudoku.
@@ -233,6 +234,8 @@ def empty_clause(data):
         if clause == []: return True
 
 def set_lit(lit, data, sign):
+    global performance_score
+    performance_score += 1
     data.literals[lit]['value'] = sign
     if lit in data.lit_list: 
         data.lit_list.remove(lit)
@@ -253,7 +256,28 @@ def copy_data(data):
         new_literals[lit]['value'] = literals[lit]['value']
     return DataTuple(new_clauses, new_literals, new_indices, new_lit_list, new_clause_counter)
 
-def dpll(data):
+def JW_heuristic(data):
+	weights = {}
+	clauses = data.clauses
+	for ind in data.indices:
+		clause = clauses[ind]
+		for lit in clause:
+			if lit in data.lit_list:
+				if lit in weights:
+					weights[lit] += (2 ** (-len(clause)))
+				else: 
+					weights[lit] = (2**(-len(clause)))
+
+	lit = max(weights, key=weights.get)
+	maxi= max(weights.values())
+	if len([k for (k, v) in weights.items() if v == maxi]) >1:
+		lit = random.choice([k for (k, v) in weights.items() if v == maxi])
+	return lit
+
+def VSIDS_heuristic(data):
+	return lit
+
+def dpll(data, heuristic):
     if data.indices == []:
         return True, data
 
@@ -270,20 +294,26 @@ def dpll(data):
         return True, data
 
     try:
-        lit = random.choice(data.lit_list)
+        if heuristic=="RAND":
+            lit = random.choice(data.lit_list)
+        if heuristic == "JW":
+            lit = JW_heuristic(data)
+        if heuristic=="VSIDS":
+        	lit = VSIDS_heuristic(data)
+
     except:
         return False, "joe"
 
     data_true = copy_data(data)
     set_lit(lit, data_true, 1)
 
-    succ, data_true = dpll(data_true)
+    succ, data_true = dpll(data_true, heuristic)
     if succ:
         return succ, data_true
 
     data_false = copy_data(data)
     set_lit(lit, data_false, -1)
-    succ, data_false = dpll(data_false)
+    succ, data_false = dpll(data_false, heuristic)
     if succ: 
         return succ, data_false
     
@@ -293,7 +323,8 @@ def dpll(data):
 with  open("sudoku-rules.txt") as file:
     rules = file.read()
 
-with open("test sudokus/1000 sudokus.txt") as file:
+#with open("test sudokus/1000 sudokus.txt") as file:
+with open("med_sudokus.txt") as file:
     dat = file.read()
 
 sudokus = to_dimacs(dat)
@@ -303,9 +334,11 @@ times = []
 datas = []
 for i in range(20):
     print(i,'/',999)
+
     data_tuple = DataTuple([], {}, [], [], 0)
 
     sudoku_nr = i
+    performance_score = 0
 
     add_clauses(rules, data_tuple)
     add_clauses(sudokus[sudoku_nr], data_tuple)
@@ -315,7 +348,8 @@ for i in range(20):
     bar = progressbar.ProgressBar(max_value=total)
 
     start_time = time.time()
-    succ, data = dpll(data_tuple)  
+    succ, data = dpll(data_tuple, 'JW')  
+
     times.append(time.time() - start_time)
     datas.append(data)
 
@@ -328,6 +362,7 @@ for i in range(20):
         solved.append(1)
         print_sudoku(true_lits)
         check_sudoku(true_lits) 
+        print("Performance score = ", performance_score)
     else:
         print("not solvable")
         solved.append(0)
