@@ -9,6 +9,8 @@ import pickle
 DataTuple = recordtype("DataTuple", "clauses literals indices lit_list clause_counter")
 global performance_score
 performance_score = 0
+global call_heuristic
+call_heuristic=0
 def print_sudoku(true_vars):
     """
     Print sudoku.
@@ -284,6 +286,7 @@ def JW_heuristic(data):
 	return lit
 
 def VSIDS_heuristic(data):
+
 	return lit
 
 def dpll(data, heuristic):
@@ -303,6 +306,8 @@ def dpll(data, heuristic):
         return True, data
 
     try:
+        global call_heuristic
+        call_heuristic+=1
         if heuristic=="RAND":
             lit = random.choice(data.lit_list)
         if heuristic == "JW":
@@ -333,7 +338,7 @@ with  open("sudoku-rules.txt") as file:
     rules = file.read()
 
 #with open("test sudokus/1000 sudokus.txt") as file:
-with open("med_sudokus.txt") as file:
+with open("very_easy_sudokus.txt") as file:
     dat = file.read()
 
 sudokus = to_dimacs(dat)
@@ -341,13 +346,16 @@ sudokus = to_dimacs(dat)
 solved = []
 times = []
 datas = []
-for i in range(20):
+scores = []
+calls = []
+for i in range(200):
     print(i,'/',999)
 
     data_tuple = DataTuple([], {}, [], [], 0)
 
     sudoku_nr = i
     performance_score = 0
+    call_heuristic=0
 
     add_clauses(rules, data_tuple)
     add_clauses(sudokus[sudoku_nr], data_tuple)
@@ -369,13 +377,24 @@ for i in range(20):
                 true_lits.append(int(lit))
 
         solved.append(1)
-        print_sudoku(true_lits)
+        #print_sudoku(true_lits)
         check_sudoku(true_lits) 
         print("Performance score = ", performance_score)
+        print("Calls to heuristic = ", call_heuristic)
+
+        scores.append(performance_score)
+        calls.append(call_heuristic)
     else:
         print("not solvable")
         solved.append(0)
 
+results = [scores, calls]
+
+f = open('scores/very_easy_JW.pckl', 'wb')
+pickle.dump(results, f)
+f.close()
+'''
 outfile = open("result.pickle", "wb")
 pickle.dump({"time":time,"solved":solved},outfile)
 outfile.close()
+'''
