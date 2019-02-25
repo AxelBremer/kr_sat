@@ -1,4 +1,3 @@
-from recordtype import recordtype
 import pdb
 import copy
 import random
@@ -6,7 +5,6 @@ import time
 import progressbar
 import pickle
 
-DataTuple = recordtype("DataTuple", "clauses literals indices lit_list clause_counter")
 global performance_score
 performance_score = 0
 global call_heuristic
@@ -85,7 +83,7 @@ def check_sudoku(true_vars):
     return correct
 
 def add_to_lit_dict(lit, data):
-    literals = data.literals
+    literals = data['literals']
     
     if(lit[0]=='-'):
         lit = lit[1:]
@@ -94,12 +92,12 @@ def add_to_lit_dict(lit, data):
         sign = 1
     if lit not in literals:
         literals[lit] = {'occ':[], 'value':0}
-        data.lit_list.append(lit)
-    literals[lit]['occ'].append((data.clause_counter, sign))
+        data['lit_list'].append(lit)
+    literals[lit]['occ'].append((data['clause_counter'], sign))
 
 def add_clauses(dimacs, data):
-    clauses = data.clauses
-    indices = data.indices
+    clauses = data['clauses']
+    indices = data['indices']
     
     for line in dimacs.split('\n'):
         clause = []
@@ -110,8 +108,8 @@ def add_clauses(dimacs, data):
                 add_to_lit_dict (lit, data)
             else:
                 clauses.append(clause)
-                indices.append(data.clause_counter)
-                data.clause_counter += 1
+                indices.append(data['clause_counter'])
+                data['clause_counter'] += 1
 
 def to_dimacs(data):
     sudokus = []
@@ -128,8 +126,8 @@ def to_dimacs(data):
     return sudokus
     
 def satisfied(ind, data):
-    indices = data.indices
-    literals = data.literals
+    indices = data['indices']
+    literals = data['literals']
     
     indices.remove(ind)
     for lit in literals:
@@ -141,10 +139,10 @@ def satisfied(ind, data):
             literals[lit]['occ'].remove(tup)
 
 def find_tautologies(data):
-    literals = data.literals
+    literals = data['literals']
     prev_ind = -1
     prev_signs = []
-    for lit in data.lit_list:
+    for lit in data['lit_list']:
         for (ind, sign) in literals[lit]['occ']:
             if ind != prev_ind:
                 prev_signs = [sign]
@@ -155,7 +153,7 @@ def find_tautologies(data):
             	prev_signs.append(sign)
 
 def is_pure(lit, data):
-    lit_list = data.literals[lit]['occ']
+    lit_list = data['literals'][lit]['occ']
     sign_list = [x[1] for x in lit_list]
     if sign_list == []:
         return False, 'joe'
@@ -164,8 +162,8 @@ def is_pure(lit, data):
 
 def find_pure_literals(data):
     found = False
-    literals = data.literals
-    for lit in data.lit_list:
+    literals = data['literals']
+    for lit in data['lit_list']:
         pure, sign = is_pure(lit, data)
         if pure:
             set_lit(lit, sign, data)
@@ -182,8 +180,8 @@ def get_sign_and_lit(atom):
     return sign, lit
 
 def is_unit(ind, data):
-    clause = data.clauses[ind]
-    literals = data.literals
+    clause = data['clauses'][ind]
+    literals = data['literals']
     f_num = 0
     num = len(clause)
     for atom in clause:
@@ -200,8 +198,8 @@ def is_unit(ind, data):
     return False, 'joe'
 
 def find_unit_clauses(data):
-    clauses = data.clauses
-    for ind in data.indices:
+    clauses = data['clauses']
+    for ind in data['indices']:
         clause = clauses[ind]
         if len(clause)==1:
             atom = clause[0]
@@ -217,53 +215,53 @@ def find_unit_clauses(data):
     return False
 
 def get_formula(data):
-    return [data.clauses[i] for i in data.indices]
+    return [data['clauses'][i] for i in data['indices']]
     
 def check_clauses(lit, data):
-    tup_list = data.literals[lit]['occ']
+    tup_list = data['literals'][lit]['occ']
     ind_list = [x[0] for x in tup_list]
     global failed_clauses
     for ind in ind_list:
-        clause = data.clauses[ind]
+        clause = data['clauses'][ind]
         n = len(clause)
         b = 0
         for atom in clause:
             sign, lit = get_sign_and_lit(atom)
-            if sign == data.literals[lit]['value']:
+            if sign == data['literals'][lit]['value']:
                 satisfied(ind, data)
-                prog = total - len(data.indices)
+                prog = total - len(data['indices'])
                 bar.update(prog)
-            elif data.literals[lit]['value'] != 0:
+            elif data['literals'][lit]['value'] != 0:
                 b += 1
         if b == n:
             failed_clauses.append(ind)
 
 def empty_clause(data):
-    for clause in data.clauses:
+    for clause in data['clauses']:
         if clause == []: return True
 
 def set_lit(lit, data, sign):
     global performance_score
     performance_score += 1
-    data.literals[lit]['value'] = sign
-    if lit in data.lit_list: 
-        data.lit_list.remove(lit)
+    data['literals'][lit]['value'] = sign
+    if lit in data['lit_list']: 
+        data['lit_list'].remove(lit)
     check_clauses(lit, data)
     
 # clauses literals indices lit_list clause_counter
 def copy_data(data):
-    new_clauses = [x for x in data.clauses]
-    new_indices = [x for x in data.indices]
-    new_lit_list = [x for x in data.lit_list]
-    new_clause_counter = data.clause_counter
+    new_clauses = [x for x in data['clauses']]
+    new_indices = [x for x in data['indices']]
+    new_lit_list = [x for x in data['lit_list']]
+    new_clause_counter = data['clause_counter']
     new_literals = {}
-    literals = data.literals
+    literals = data['literals']
     for lit in literals:
         new_literals[lit] = {'occ':[], 'value':0}
         for tup in literals[lit]['occ']:
             new_literals[lit]['occ'].append(tup)
         new_literals[lit]['value'] = literals[lit]['value']
-    return DataTuple(new_clauses, new_literals, new_indices, new_lit_list, new_clause_counter)
+    return {'clauses': new_clauses, 'literals':new_literals, 'indices':new_indices, 'lit_list':new_lit_list, 'clause_counter':new_clause_counter}
 
 def num_unsatisfied(clause, literals):
 	num = 0
@@ -274,13 +272,13 @@ def num_unsatisfied(clause, literals):
 
 def JW_heuristic(data):
 	weights = {}
-	clauses = data.clauses
-	for ind in data.indices:
+	clauses = data['clauses']
+	for ind in data['indices']:
 		clause = clauses[ind]
 		
 		for lit in clause:
-			if lit in data.lit_list:
-				leng = num_unsatisfied(clause, data.literals)
+			if lit in data['lit_list']:
+				leng = num_unsatisfied(clause, data['literals'])
 				if lit in weights:
 					weights[lit] += (2 ** (-leng))
 				else: 
@@ -297,7 +295,7 @@ def VSIDS_heuristic(data):
 	return lit
 
 def dpll(data, heuristic):
-    if data.indices == []:
+    if data['indices'] == []:
         return True, data
 
     if empty_clause(data): return False
@@ -309,14 +307,14 @@ def dpll(data, heuristic):
     while(find_unit_clauses(data)):
         pass
 
-    if data.indices == []:
+    if data['indices'] == []:
         return True, data
 
     try:
         global call_heuristic
         call_heuristic+=1
         if heuristic=="RAND":
-            lit = random.choice(data.lit_list)
+            lit = random.choice(data['lit_list'])
         if heuristic == "JW":
             lit = JW_heuristic(data)
         if heuristic=="VSIDS":
@@ -358,7 +356,7 @@ calls = []
 for i in range(10):
     print(i,'/',999)
 
-    data_tuple = DataTuple([], {}, [], [], 0)
+    data_tuple = {'clauses':[], 'literals':{}, 'indices':[], 'lit_list':[], 'clause_counter':0}
 
     sudoku_nr = i
     performance_score = 0
@@ -370,22 +368,22 @@ for i in range(10):
     add_clauses(sudokus[sudoku_nr], data_tuple)
 #     add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
 
-    total = len(data_tuple.clauses)
+    total = len(data_tuple['clauses'])
     bar = progressbar.ProgressBar(max_value=total)
 
     start_time = time.time()
     succ, data = dpll(data_tuple, 'JW')  
 
     print('\n')
-    print(conflicts)
+    print(failed_clauses)
     
     times.append(time.time() - start_time)
     datas.append(data)
 
     if succ:
         true_lits = []
-        for lit in data.literals:
-            if data.literals[lit]['value'] == 1:
+        for lit in data['literals']:
+            if data['literals'][lit]['value'] == 1:
                 true_lits.append(int(lit))
 
         solved.append(1)
