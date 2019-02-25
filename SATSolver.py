@@ -4,11 +4,9 @@ import random
 import time
 import progressbar
 import pickle
+from collections import Counter
 
-global performance_score
-performance_score = 0
-global call_heuristic
-call_heuristic=0
+global performance_score, call_heuristic, failed_clause, bar, total
 def print_sudoku(true_vars):
     """
     Print sudoku.
@@ -218,9 +216,9 @@ def get_formula(data):
     return [data['clauses'][i] for i in data['indices']]
     
 def check_clauses(lit, data):
+    global failed_clauses, total, bar
     tup_list = data['literals'][lit]['occ']
     ind_list = [x[0] for x in tup_list]
-    global failed_clauses
     for ind in ind_list:
         clause = data['clauses'][ind]
         n = len(clause)
@@ -338,73 +336,21 @@ def dpll(data, heuristic):
     
     return False, "joe"
     
+def solve(clauses, heur):
+    global performance_score, call_heuristic, failed_clauses, bar, total
 
-with  open("sudoku-rules.txt") as file:
-    rules = file.read()
-
-#with open("test sudokus/1000 sudokus.txt") as file:
-with open("very_hard_sudokus.txt") as file:
-    dat = file.read()
-
-sudokus = to_dimacs(dat)
-
-solved = []
-times = []
-datas = []
-scores = []
-calls = []
-for i in range(10):
-    print(i,'/',999)
-
-    data_tuple = {'clauses':[], 'literals':{}, 'indices':[], 'lit_list':[], 'clause_counter':0}
-
-    sudoku_nr = i
+    data_dict = {'clauses':[], 'literals':{}, 'indices':[], 'lit_list':[], 'clause_counter':0}
     performance_score = 0
     call_heuristic=0
 
     failed_clauses = []
 
-    add_clauses(rules, data_tuple)
-    add_clauses(sudokus[sudoku_nr], data_tuple)
-#     add_clauses("111 0\n 167 0 \n 189 0\n 223 0\n 252 0\n 298 0\n 339 0\n 346 0 \n 375 0\n 435 0\n 443 0\n 479 0\n 521 0\n 558 0\n 592 0\n 616 0\n 664 0\n 713 0\n 781 0\n 824 0\n 831 0\n 897 0\n 937 0\n 973 0\n", data_tuple)
+    add_clauses(clauses, data_dict)
 
-    total = len(data_tuple['clauses'])
-    bar = progressbar.ProgressBar(max_value=total)
+    total = len(data_dict['clauses'])
 
-    start_time = time.time()
-    succ, data = dpll(data_tuple, 'JW')  
+    bar = progressbar.ProgressBar(max_value=total) 
 
-    print('\n')
-    print(failed_clauses)
-    
-    times.append(time.time() - start_time)
-    datas.append(data)
+    succ, data = dpll(data_dict, heur)
 
-    if succ:
-        true_lits = []
-        for lit in data['literals']:
-            if data['literals'][lit]['value'] == 1:
-                true_lits.append(int(lit))
-
-        solved.append(1)
-        #print_sudoku(true_lits)
-        check_sudoku(true_lits) 
-        print("Performance score = ", performance_score)
-        print("Calls to heuristic = ", call_heuristic)
-
-        scores.append(performance_score)
-        calls.append(call_heuristic)
-    else:
-        print("not solvable")
-        solved.append(0)
-
-results = [scores, calls]
-
-f = open('scores/very_easy_JW.pckl', 'wb')
-pickle.dump(results, f)
-f.close()
-'''
-outfile = open("result.pickle", "wb")
-pickle.dump({"time":time,"solved":solved},outfile)
-outfile.close()
-'''
+    return succ, data, performance_score, call_heuristic
