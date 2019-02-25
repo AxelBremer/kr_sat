@@ -6,7 +6,7 @@ import progressbar
 import pickle
 from collections import Counter
 
-global performance_score, call_heuristic, failed_clause, bar, total
+global performance_score, call_heuristic, failed_clauses, bar, total
 def print_sudoku(true_vars):
     """
     Print sudoku.
@@ -288,8 +288,24 @@ def JW_heuristic(data):
 		lit = random.choice([k for (k, v) in weights.items() if v == maxi])
 	return lit
 
-def VSIDS_heuristic(data):
+def Conflict_heuristic(data):
+	weights = {}
+	global failed_clauses
+	if failed_clauses == []:
+		return random.choice(data['lit_list'])
+	for ind in failed_clauses:
+		clause = data['clauses'][ind]
+		for lit in clause:
+			if lit in data['lit_list']:
+				if lit in weights:
+					weights[lit]+=1
+				else:
+					weights[lit] = 1
 
+	lit = max(weights, key=weights.get)
+	maxi= max(weights.values())
+	if len([k for (k, v) in weights.items() if v == maxi]) >1:
+		lit = random.choice([k for (k, v) in weights.items() if v == maxi])
 	return lit
 
 def dpll(data, heuristic):
@@ -315,8 +331,8 @@ def dpll(data, heuristic):
             lit = random.choice(data['lit_list'])
         if heuristic == "JW":
             lit = JW_heuristic(data)
-        if heuristic=="VSIDS":
-        	lit = VSIDS_heuristic(data)
+        if heuristic=="Conflict":
+        	lit = Conflict_heuristic(data)
 
     except:
         return False, "joe"
@@ -354,3 +370,6 @@ def solve(clauses, heur):
     succ, data = dpll(data_dict, heur)
 
     return succ, data, performance_score, call_heuristic
+
+
+ 

@@ -1,7 +1,7 @@
 from SATSolver import *
 import sys
 
-heurs = ['RAND', 'JW']
+heurs = ['RAND', 'JW', "Conflict"]
 
 if len(sys.argv) != 2:
     print('Usage: runtests.py RAND|JW')
@@ -66,7 +66,8 @@ for diff in difficulties:
             print("not solvable")
 
     results = [scores, calls]
-
+    '''
     f = open('scores/'+diff+'_'+heur+'.pckl', 'wb')
     pickle.dump(results, f)
     f.close()
+    '''
