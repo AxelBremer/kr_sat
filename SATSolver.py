@@ -222,14 +222,21 @@ def get_formula(data):
 def check_clauses(lit, data):
     tup_list = data.literals[lit]['occ']
     ind_list = [x[0] for x in tup_list]
+    global failed_clauses
     for ind in ind_list:
         clause = data.clauses[ind]
+        n = len(clause)
+        b = 0
         for atom in clause:
             sign, lit = get_sign_and_lit(atom)
             if sign == data.literals[lit]['value']:
                 satisfied(ind, data)
                 prog = total - len(data.indices)
                 bar.update(prog)
+            elif data.literals[lit]['value'] != 0:
+                b += 1
+        if b == n:
+            failed_clauses.append(ind)
 
 def empty_clause(data):
     for clause in data.clauses:
@@ -338,7 +345,7 @@ with  open("sudoku-rules.txt") as file:
     rules = file.read()
 
 #with open("test sudokus/1000 sudokus.txt") as file:
-with open("very_easy_sudokus.txt") as file:
+with open("very_hard_sudokus.txt") as file:
     dat = file.read()
 
 sudokus = to_dimacs(dat)
@@ -348,7 +355,7 @@ times = []
 datas = []
 scores = []
 calls = []
-for i in range(200):
+for i in range(10):
     print(i,'/',999)
 
     data_tuple = DataTuple([], {}, [], [], 0)
@@ -356,6 +363,8 @@ for i in range(200):
     sudoku_nr = i
     performance_score = 0
     call_heuristic=0
+
+    failed_clauses = []
 
     add_clauses(rules, data_tuple)
     add_clauses(sudokus[sudoku_nr], data_tuple)
@@ -367,6 +376,9 @@ for i in range(200):
     start_time = time.time()
     succ, data = dpll(data_tuple, 'JW')  
 
+    print('\n')
+    print(conflicts)
+    
     times.append(time.time() - start_time)
     datas.append(data)
 
