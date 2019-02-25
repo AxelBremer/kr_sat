@@ -256,17 +256,26 @@ def copy_data(data):
         new_literals[lit]['value'] = literals[lit]['value']
     return DataTuple(new_clauses, new_literals, new_indices, new_lit_list, new_clause_counter)
 
+def num_unsatisfied(clause, literals):
+	num = 0
+	for lit in clause:
+		if literals[lit]['value']==0:
+			num+=1
+	return num
+
 def JW_heuristic(data):
 	weights = {}
 	clauses = data.clauses
 	for ind in data.indices:
 		clause = clauses[ind]
+		
 		for lit in clause:
 			if lit in data.lit_list:
+				leng = num_unsatisfied(clause, data.literals)
 				if lit in weights:
-					weights[lit] += (2 ** (-len(clause)))
+					weights[lit] += (2 ** (-leng))
 				else: 
-					weights[lit] = (2**(-len(clause)))
+					weights[lit] = (2**(-leng))
 
 	lit = max(weights, key=weights.get)
 	maxi= max(weights.values())
