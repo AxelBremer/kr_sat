@@ -66,8 +66,7 @@ for diff in difficulties:
             print("not solvable")
 
     results = [scores, calls]
-    '''
+
     f = open('scores/'+diff+'_'+heur+'.pckl', 'wb')
     pickle.dump(results, f)
     f.close()
-    '''

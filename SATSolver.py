@@ -338,14 +338,14 @@ def dpll(data, heuristic):
         return False, "joe"
 
     data_true = copy_data(data)
-    set_lit(lit, data_true, 1)
+    set_lit(lit, data_true, -1)
 
     succ, data_true = dpll(data_true, heuristic)
     if succ:
         return succ, data_true
 
     data_false = copy_data(data)
-    set_lit(lit, data_false, -1)
+    set_lit(lit, data_false, 1)
     succ, data_false = dpll(data_false, heuristic)
     if succ: 
         return succ, data_false
