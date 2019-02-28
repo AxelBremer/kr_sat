@@ -268,6 +268,15 @@ def num_unsatisfied(clause, literals):
 			num+=1
 	return num
 
+def dynamic_switch_heuristic(data, threshold=10):
+    global failed_clauses
+    n = len(failed_clauses)
+    if (n < treshold):
+        lit = JW_heuristic(data)
+    else:
+        lit = Conflict_heuristic(data)
+    return lit
+
 def JW_heuristic(data):
 	weights = {}
 	clauses = data['clauses']
@@ -289,26 +298,27 @@ def JW_heuristic(data):
 	return lit
 
 def Conflict_heuristic(data):
-	weights = {}
-	global failed_clauses
-	if failed_clauses == []:
-		return random.choice(data['lit_list'])
-	for ind in failed_clauses:
-		clause = data['clauses'][ind]
-		for lit in clause:
-			if lit in data['lit_list']:
-				if lit in weights:
-					weights[lit]+=1
-				else:
-					weights[lit] = 1
+    weights = {}
+    global failed_clauses
+    if failed_clauses == []:
+        return random.choice(data['lit_list'])
+    for ind in failed_clauses:
+        clause = data['clauses'][ind]
+        for lit in clause:
+            if lit in data['lit_list']:
+                if lit in weights:
+                    weights[lit]+=1
+                else:
+                    weights[lit] = 1
+    if bool(weights) == False:
+        return random.choice(data['lit_list'])                                                                                                                                                                                                 
+    lit = max(weights, key=weights.get)
+    maxi= max(weights.values())
+    if len([k for (k, v) in weights.items() if v == maxi]) >1:
+        lit = random.choice([k for (k, v) in weights.items() if v == maxi])
+    return lit
 
-	lit = max(weights, key=weights.get)
-	maxi= max(weights.values())
-	if len([k for (k, v) in weights.items() if v == maxi]) >1:
-		lit = random.choice([k for (k, v) in weights.items() if v == maxi])
-	return lit
-
-def dpll(data, heuristic):
+def dpll(data, heuristic, threshold):
     if data['indices'] == []:
         return True, data
 
@@ -327,12 +337,14 @@ def dpll(data, heuristic):
     try:
         global call_heuristic
         call_heuristic+=1
-        if heuristic=="RAND":
+        if heuristic == "RAND":
             lit = random.choice(data['lit_list'])
         if heuristic == "JW":
             lit = JW_heuristic(data)
         if heuristic=="Conflict":
         	lit = Conflict_heuristic(data)
+        if heuristic == "SWITCH":
+            lit = Dynamic_switch_heuristic(data, threshold)
 
     except:
         return False, "joe"
@@ -352,7 +364,7 @@ def dpll(data, heuristic):
     
     return False, "joe"
     
-def solve(clauses, heur):
+def solve(clauses, heur, threshold):
     global performance_score, call_heuristic, failed_clauses, bar, total
 
     data_dict = {'clauses':[], 'literals':{}, 'indices':[], 'lit_list':[], 'clause_counter':0}
@@ -367,7 +379,7 @@ def solve(clauses, heur):
 
     bar = progressbar.ProgressBar(max_value=total) 
 
-    succ, data = dpll(data_dict, heur)
+    succ, data = dpll(data_dict, heur, threshold)
 
     return succ, data, performance_score, call_heuristic
 

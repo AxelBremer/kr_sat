@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 levels = ['very_easy', 'easy', 'med', 'hard', 'very_hard']
-heurs = ['RAND', 'JW']
+heurs = ['RAND', 'JW', 'Conflict']
 rand_results = {}
 jw_results = {}
 conflict_results = {}
@@ -27,6 +27,7 @@ def get_dict(heur_dict):
 	calls = []
 	for key in heur_dict:
 		value = heur_dict[key]
+		print(len(value[0]), len(value[1]))
 		s = np.mean(value[0])
 		c = np.mean(value[1])
 		print(key, "scores", s, "calls", c)
@@ -90,5 +91,8 @@ print("Random")
 scoresr, callsr = get_dict(rand_results)
 print("JW")
 scoresj, callsj = get_dict(jw_results)
+print("Conflict")
+scoresc, callsc = get_dict(conflict_results)
 
-plot_histogram(np.asarray(callsr), np.asarray(callsj), np.asarray(callsj))
+
+plot_histogram(np.asarray(callsr), np.asarray(callsj), np.asarray(callsc))
