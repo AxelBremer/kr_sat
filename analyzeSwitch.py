@@ -7,21 +7,28 @@ import statistics
 
 
 levels = ['very_easy', 'easy', 'med', 'hard', 'very_hard']
-heurs = ['RAND', 'JW', 'Conflict']
-rand_results = {}
-jw_results = {}
-conflict_results = {}
-for i in levels:
-    for j in heurs:
-    	with open("scores/"+i+"_sudokus_"+j+".pckl", 'rb') as f: 
-    		dat = pickle.load(f)
-    	if(j == "RAND"):
-    		rand_results[i] = dat
-    	if(j == "JW"):
-    		jw_results[i] = dat
-    	elif(j=="Conflict"):
-    		conflict_results[i] = dat
+N = ['10', '15', '25', '50', '75']
+switch_results = {}
 
+for j in N: 
+    print("N = ", j)
+    results = []
+    for i in levels:
+    	with open("scores/"+i+"_sudokus_SWITCH_"+j+".pckl", 'rb') as f: 
+    		dat = pickle.load(f)
+    	calls = dat[1]
+    	results.append(calls)
+    flat = [y for x in results for y in x]
+    print(round(np.mean(flat)))
+    print(np.std(flat))
+
+
+results = []
+for i in levels: 
+    print(i)
+    with open("scores/"+i+"_sudokus_SWITCH_50.pckl", 'rb') as f: 
+        dat = pickle.load(f)
+    print(round(np.mean(dat[1])))
 
 def get_dict(heur_dict):
 	scores = []
@@ -106,7 +113,7 @@ def plot_histogram(c1, c2, c3, m, s):
 	            ('RAND', 'JW', 'Conflict') )
 	plt.tight_layout()
 	plt.show()
-
+'''
 print("Random")
 scoresr, callsr= get_dict(rand_results)
 print("JW")
@@ -123,3 +130,4 @@ for i in levels:
 	data.append(jw_results[i][1])
 
 plot_violin(data)
+'''
