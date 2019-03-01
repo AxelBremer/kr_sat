@@ -268,10 +268,10 @@ def num_unsatisfied(clause, literals):
 			num+=1
 	return num
 
-def dynamic_switch_heuristic(data, threshold=10):
+def Dynamic_switch_heuristic(data, threshold=10):
     global failed_clauses
     n = len(failed_clauses)
-    if (n < treshold):
+    if (n < threshold):
         lit = JW_heuristic(data)
     else:
         lit = Conflict_heuristic(data)
@@ -352,13 +352,13 @@ def dpll(data, heuristic, threshold):
     data_true = copy_data(data)
     set_lit(lit, data_true, -1)
 
-    succ, data_true = dpll(data_true, heuristic)
+    succ, data_true = dpll(data_true, heuristic, threshold)
     if succ:
         return succ, data_true
 
     data_false = copy_data(data)
     set_lit(lit, data_false, 1)
-    succ, data_false = dpll(data_false, heuristic)
+    succ, data_false = dpll(data_false, heuristic, threshold)
     if succ: 
         return succ, data_false
     
