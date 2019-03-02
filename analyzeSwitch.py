@@ -4,12 +4,15 @@ import glob, os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import statistics
+from scipy.interpolate import spline
+
 
 
 levels = ['very_easy', 'easy', 'med', 'hard', 'very_hard']
 N = ['10', '15', '25', '50', '75']
 switch_results = {}
 
+overall = []
 for j in N: 
     print("N = ", j)
     results = []
@@ -20,15 +23,73 @@ for j in N:
     	results.append(calls)
     flat = [y for x in results for y in x]
     print(round(np.mean(flat)))
-    print(np.std(flat))
+    overall.append(round(np.mean(flat)))
 
 
-results = []
-for i in levels: 
-    print(i)
-    with open("scores/"+i+"_sudokus_SWITCH_50.pckl", 'rb') as f: 
-        dat = pickle.load(f)
-    print(round(np.mean(dat[1])))
+
+def line_plot(a, b, c, d, e, f):
+
+	N = [10 , 15, 25, 50, 75]
+	T = np.array(N)
+	xnew = np.linspace(T.min(),T.max(),200) #300 represents number of points to make between T.min and T.max
+	print(a)
+	power_smooth1 = spline(T,a,xnew)
+
+	power_smooth2 = spline(T,b,xnew)
+
+	power_smooth3 = spline(T,c,xnew)
+
+	power_smooth4 = spline(T,d,xnew)
+
+	power_smooth5 = spline(T,e,xnew)
+
+	
+	fig = plt.figure()
+	fig.set_size_inches(7, 5)
+
+	ax = fig.add_subplot(111)
+	ax.yaxis.grid(zorder=0)
+	plt.title("Effect of N on performance")
+	plt.ylabel('Average number of calls')
+	plt.xlabel('Hyper parameter N ')
+	plt.xticks(N)
+	plt.yticks(np.arange(0, 100, 10))
+
+	'''
+	plt.plot(xnew, power_smooth1,'LightSeaGreen', label="Very easy") # plotting t, a separately 
+	plt.plot(xnew, power_smooth2, 'LightSkyBlue', label="Easy") # plotting t, b separately  
+	plt.plot(xnew, power_smooth3, 'LightSlateGrey', label="Medium")
+	plt.plot(xnew, power_smooth4, 'g', label="Hard")
+	plt.plot(xnew, power_smooth5, 'r', label="Very hard")
+	'''
+	print(a, b, c, d, e)
+	plt.plot(N, a, 'firebrick',  marker='o', lw=3, label="Very easy") # plotting t, a separately 
+	plt.plot(N, b, '#ff8c00',  marker='o',lw=3, label="Easy") # plotting t, b separately  
+	plt.plot(N, c,  '#008b8b',  lw=3, marker='o',label="Medium")
+	plt.plot(N, d, '#8b008b',  marker='o',lw=3,label="Hard")
+	plt.plot(N, e, '#00008b', marker='o', lw=3,label="Very hard")
+	plt.plot(N, f, 'LightSlateGrey',marker= 'o',ls='--', lw=2.8,label='All categories')
+
+	lgd = plt.legend(loc='best', bbox_to_anchor=(0.64, 0.64))
+	plt.show()
+
+rs = []
+for i in levels:
+    avg = []
+    for j in N:
+        with open("scores/"+i+"_sudokus_SWITCH_"+j+".pckl", 'rb') as f: 
+            dat = pickle.load(f)
+        calls = dat[1]
+        avg.append(round(np.mean(calls)))
+    rs.append(avg)
+
+a = rs[0]
+b = rs[1]
+c = rs[2]
+d = rs[3]
+e = rs[4]
+
+line_plot(a, b, c, d, e, overall)
 
 def get_dict(heur_dict):
 	scores = []
@@ -51,16 +112,18 @@ def plot_violin(results):
 	sns.set(style="whitegrid") 
 	y_labels = ["Average number of calls"]
 	x_labels = ['very easy', 'easy', 'medium', 'hard', 'very hard']
-	ax = sns.violinplot(data=results, palette="muted", split=True)
-	#ax = sns.boxplot(data=results, palette="muted")
+	c = ['darkred', 'darkorange', 'darkcyan',  'darkmagenta', 'darkblue' ]
+	plt.title('Violin plots for the switching strategy with N=50')
+	ax = sns.violinplot(data=results, palette=c, bw=0.3, cut= 0, scale='width', saturation=0.8)
+	#ax = sns.boxplot(data=results, palette=c)
 
 	ax.set_xticklabels(x_labels)
+	ax.set_ylabel('Average number of calls')
+	plt.tight_layout()
 	plt.show()
 
-def plot_histogram(c1, c2, c3, m, s):
+def plot_histogram(c1, m, s):
 	r1 = c1[0]
-	r2 = c2[0]
-	r3 = c3[0]
 
 	N = 5
 	ind = np.arange(N)  
@@ -77,10 +140,6 @@ def plot_histogram(c1, c2, c3, m, s):
 
 	rects1 = ax.bar(ind, r1, width, alpha=1, color= '#ff8c00', zorder=3)
 	    
-	rects2 = ax.bar(ind+width, r2, width, alpha=1, color= '#008b8b', zorder=3)
-
-	rects3 = ax.bar(ind+width*2, r3, width, alpha=1, color='#8b008b', zorder=3)
-	    
 
 	ax.set_ylabel('Average number of calls')
 	ax.yaxis.set_ticks(np.arange(0, m, s))
@@ -88,9 +147,8 @@ def plot_histogram(c1, c2, c3, m, s):
 
 	ax.set_xticks(ind+width)
 	ax.set_xticklabels( ('very easy', 'easy', 'medium', 'hard', 'very hard') )
-	plt.legend( (rects1[0], rects2[0], rects3[0]), 
-	          ('RAND', 'JW', 'Conflict') , loc="upper right")
-	plt.title("Branching heuristic performances")
+	plt.legend( loc="upper right")
+	plt.title("Switching strategy performances")
 
 	def autolabel(rects):
 	 
@@ -103,31 +161,39 @@ def plot_histogram(c1, c2, c3, m, s):
 	        n+=1
 
 	autolabel(rects1)
-	autolabel(rects2)
-	autolabel(rects3)
+
 
 	box = ax.get_position()
 	ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
-	ax.legend((rects1[0], rects2[0], rects3[0]), 
-	            ('RAND', 'JW', 'Conflict') )
+	ax.legend((rects1[0], 
+	            ('Switch') ))
 	plt.tight_layout()
 	plt.show()
-'''
-print("Random")
-scoresr, callsr= get_dict(rand_results)
-print("JW")
-scoresj, callsj = get_dict(jw_results)
-print("Conflict")
-scoresc, callsc = get_dict(conflict_results)
+
+switch_results = {}
+
+for i in levels:
+    	with open("scores/"+i+"_sudokus_SWITCH_50.pckl", 'rb') as f: 
+    		dat = pickle.load(f)
+    		switch_results[i] = dat
+    
 
 
-plot_histogram(callsr, callsj, callsc, 160, 10)
-plot_histogram([scoresr], [scoresj], [scoresc], 8500, 200)
+print("Switch")
+scores, calls= get_dict(switch_results)
+
+
+#plot_histogram(calls, 160, 10)
 
 data = []
 for i in levels:
-	data.append(jw_results[i][1])
+	r = switch_results[i][1]
+	r = [x for x in r if x!=0 and (x<150)]
+	r = np.asarray(r)
+	m = r.max()
+	r = [x for x in r if x != m]
+	print(len(r))
+	data.append(r)
 
 plot_violin(data)
-'''
